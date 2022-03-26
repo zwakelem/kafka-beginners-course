@@ -34,3 +34,4 @@ build/
 log/current.log
 *.log
 log/current.log
+*.class
