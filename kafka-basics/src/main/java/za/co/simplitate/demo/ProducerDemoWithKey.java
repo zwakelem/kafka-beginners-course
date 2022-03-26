@@ -23,7 +23,7 @@ public class ProducerDemoWithKey {
         // create producer
         KafkaProducer<String, String> producer = new KafkaProducer<>(properties);
 
-        for(int i = 0; i < 10; i++) {
+        for(int i = 0; i < 50; i++) {
 
             String topic = "demo_java";
             String value = "hello world " + i;
