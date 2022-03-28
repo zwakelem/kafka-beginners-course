@@ -9,7 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>kafka-basics</artifactId>
+    <artifactId>kafka-producer-wikimedia</artifactId>
 
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
@@ -35,6 +35,19 @@
             <artifactId>slf4j-simple</artifactId>
             <version>1.7.36</version>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp -->
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp</artifactId>
+            <version>4.9.3</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/com.launchdarkly/okhttp-eventsource -->
+        <dependency>
+            <groupId>com.launchdarkly</groupId>
+            <artifactId>okhttp-eventsource</artifactId>
+            <version>2.5.0</version>
+        </dependency>
+
     </dependencies>
 
 </project>
