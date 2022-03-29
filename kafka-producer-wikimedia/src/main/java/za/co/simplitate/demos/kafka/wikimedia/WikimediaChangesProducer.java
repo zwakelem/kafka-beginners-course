@@ -40,7 +40,7 @@ public class WikimediaChangesProducer {
         // start the producer in another thread
         eventSource.start();
 
-        TimeUnit.SECONDS.sleep(5);
+        TimeUnit.SECONDS.sleep(500);
 
     }
 }
