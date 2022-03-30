@@ -1,5 +1,6 @@
 package za.co.simplitate.demos.kafka.opensearch;
 
+import com.google.gson.JsonParser;
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
@@ -62,9 +63,16 @@ public class OpenSearchConsumer {
                 LOG.info("Received " + recordCount + " record(s)");
 
                 for(ConsumerRecord<String, String> record : consumerRecords) {
+                    // make consumer idempotent
+                    // strategy 1
+                    // String id = record.topic() + "_" + record.partition() + "_" + record.offset();
+
+                    // strategy 2
+                    String id = extractId(record.value());
+
                     // send record into openSearch
                     IndexRequest indexRequest = new IndexRequest(wikimedia)
-                            .source(record.value(), XContentType.JSON);
+                            .source(record.value(), XContentType.JSON).id(id);
 
                     IndexResponse response = openSearchClient.index(indexRequest, RequestOptions.DEFAULT);
                     LOG.info(response.getId());
@@ -73,6 +81,13 @@ public class OpenSearchConsumer {
 
         }
 
+    }
+
+    private static String extractId(String json) {
+        return JsonParser.parseString(json)
+                .getAsJsonObject().get("meta")
+                .getAsJsonObject().get("id")
+                .getAsString();
     }
 
     private static KafkaConsumer<String, String> createKafkaConsumer() {
