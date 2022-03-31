@@ -12,6 +12,8 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.serialization.StringDeserializer;
+import org.opensearch.action.bulk.BulkRequest;
+import org.opensearch.action.bulk.BulkResponse;
 import org.opensearch.action.index.IndexRequest;
 import org.opensearch.action.index.IndexResponse;
 import org.opensearch.client.RequestOptions;
@@ -62,6 +64,8 @@ public class OpenSearchConsumer {
                 int recordCount = consumerRecords.count();
                 LOG.info("Received " + recordCount + " record(s)");
 
+                BulkRequest bulkRequest = new BulkRequest();
+
                 for(ConsumerRecord<String, String> record : consumerRecords) {
                     // make consumer idempotent
                     // strategy 1
@@ -74,13 +78,29 @@ public class OpenSearchConsumer {
                     IndexRequest indexRequest = new IndexRequest(wikimedia)
                             .source(record.value(), XContentType.JSON).id(id);
 
-                    IndexResponse response = openSearchClient.index(indexRequest, RequestOptions.DEFAULT);
-                    LOG.info(response.getId());
+//                    IndexResponse response = openSearchClient.index(indexRequest, RequestOptions.DEFAULT);
+//                    LOG.info(response.getId());
+
+                    bulkRequest.add(indexRequest);
+                }
+
+                if(bulkRequest.numberOfActions() > 0) {
+                    BulkResponse bulkResponse = openSearchClient.bulk(bulkRequest, RequestOptions.DEFAULT);
+                    LOG.info("Inserted " + bulkResponse.getItems().length + " record(s)");
+
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+
+                    }
+
+                    //commit offsets
+                    // this we are using at-least-once strategy because we commit after processing the whole batch
+                    kafkaConsumer.commitSync();
+                    LOG.info("Offsets have been commited!!");
                 }
             }
-
         }
-
     }
 
     private static String extractId(String json) {
@@ -101,6 +121,7 @@ public class OpenSearchConsumer {
         properties.setProperty(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServer);
         properties.setProperty(ConsumerConfig.GROUP_ID_CONFIG, groupId);
         properties.setProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
+        properties.setProperty(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
 
         return new KafkaConsumer<>(properties);
     }
